@@ -97,6 +97,7 @@ html, body {
         top:50%;    
     }
 }
+
 /*@keyframes swim{
     from{
         right:-5%;
@@ -146,6 +147,7 @@ html, body {
 .mt-15{
     margin-top: 15px;
 }
+
 .mt-20{
     margin-top: 20px;
 }

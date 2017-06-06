@@ -9,6 +9,7 @@ $(function () {
     var debug = true;
     
     // конфигурация steem/golos
+
     var MODE = 'golos';
     
     // время жизни животного в секундах
@@ -27,8 +28,8 @@ $(function () {
     } else {
         var DOMAIN = 'https://steemit.com/';
     }
-       
-    /* Заполнить значения полей из cookie */
+
+  /* Заполнить значения полей из cookie */
    
     if((Cookies.get('name') !== 'null') && (Cookies.get('name') !== undefined)){
         $('#name').val(Cookies.get('name'));       
@@ -44,6 +45,7 @@ $(function () {
     } else {
         $('#black_list').val(BLACK_LIST);
     }
+
     BLACK_LIST = BLACK_LIST.replace(/\s+/g, '').split(',');
     
     // состояние чекбоксов по кукам
@@ -60,7 +62,7 @@ $(function () {
        $('#bg_on').attr('checked', false);
        $('body').addClass('bg-gradient');
     }
-     
+
     /* События  */
     
     // поддержка события oninput
@@ -81,6 +83,7 @@ $(function () {
         Cookies.set('black_list', $('#black_list').val(), {expires: COOKIE_EXPIRES});
         BLACK_LIST = $('#black_list').val().replace(/\s+/g, '').split(',');
     });
+
     // показать/скрыть фон
     $('#bg_on').on('change', function(){
         $('body').toggleClass('bg-gradient');
@@ -185,7 +188,7 @@ $(function () {
         
         // определить условный тип голосующего
         whale_data = classificate(whale_data);
-        
+
         _d(whale_data);
         
         // создать животное       
