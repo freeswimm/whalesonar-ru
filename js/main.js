@@ -9,7 +9,7 @@ $(function () {
     
     // конфигурация steem/golos
     var MODE = 'golos';
-          
+      
     // время жизни животного в секундах
     var LIFE_INTERVAL = 15;
     // SP по умолчанию
@@ -27,7 +27,7 @@ $(function () {
             pic : './img/dolphin.gif',
             min_gests : 10,
             max_gests : 100,
-            sound : dolphin_sounds[getRand(0,dolphin_sounds.length-1)],
+            sound : function(){return dolphin_sounds[getRand(0,dolphin_sounds.length-1)];},
             max_size_rise: 1.5 // кэффициент максимального увеличения размеров при достижении max кол-ва gests 
         },
         orca : {
@@ -36,7 +36,7 @@ $(function () {
             pic : './img/orca2.gif',       
             min_gests : 100,
             max_gests : 1000,
-            sound : orca_sounds[getRand(0,orca_sounds.length-1)],
+            sound : function(){return orca_sounds[getRand(0,orca_sounds.length-1)];},
             max_size_rise: 1.25
         },        
         humback_whale : {
@@ -45,15 +45,15 @@ $(function () {
             pic : './img/humback-whale.gif',
             min_gests : 1000,
             max_gests : 1500,
-            sound : whale_sounds[getRand(0,whale_sounds.length-1)]
+            sound : function(){ return whale_sounds[getRand(0,whale_sounds.length-1)];}
         },        
         fin_whale : {
-            title : 'Полосатик',
+            title : 'Финвал',
             width : '220px',
             pic : './img/fin-whale.gif',
             min_gests : 1500,
             max_gests : 3000,
-            sound : whale_sounds[getRand(0,whale_sounds.length-1)]
+            sound : function(){ return whale_sounds[getRand(0,whale_sounds.length-1)];}
         },        
         blue_whale : {
             title : 'Синий кит',
@@ -61,7 +61,7 @@ $(function () {
             pic : './img/blue_whale.gif',
             min_gests : 3000,
             max_gests : Number.MAX_VALUE,
-            sound : whale_sounds[getRand(0,whale_sounds.length-1)]
+            sound : function(){ return whale_sounds[getRand(0,whale_sounds.length-1)];}
         }
     };
     /*---end Дефолтные размеры ---*/
@@ -71,7 +71,7 @@ $(function () {
         
     /* -----ДЕБАГ----- */    
     // режим отладки
-    var debug = false;
+    var debug = true;
     // останавливает кита 
     var stop_mode = false;
     var show_only = '';      
@@ -95,7 +95,7 @@ $(function () {
          
     // предустановки для STEEM / GOLOS
     if(MODE == 'golos'){ 
-        steem.config.set('websocket', 'wss://ws.golos.io');
+        golos.config.set('websocket', 'wss://ws17.golos.io'); // wss://api.golos.cf - нода @vik// wss://ws.golos.io - публичная
         var DOMAIN = 'https://golos.io/';
         var coin_code = 'GOLOS';
     } else {
@@ -233,11 +233,11 @@ $(function () {
     });
     
     /* Работа с транзакциями GOLOS/STEEM   */
-    steem.api.getDynamicGlobalProperties(function (err, steem_data) {
+    golos.api.getDynamicGlobalProperties(function (err, golos_data) {
         
         if (err === null) {
 
-            steem.api.streamOperations(function (err, operations) {
+            golos.api.streamOperations(function (err, operations) {
 
                 if (err === null) {
                     
@@ -246,22 +246,22 @@ $(function () {
                         if ((operation.voter !== undefined) && (BLACK_LIST.indexOf(operation.voter) === -1)) {
                             
                             // получить данные куратора
-                            steem.api.getAccounts([operation.voter], function (err, account) {
+                            golos.api.getAccounts([operation.voter], function (err, account) {
                                
                                 if ((err === null)) {
                                     
-                                    //var reputation = steem.formatter.reputation(result[0].reputation); // округленное целое число
+                                    //var reputation = golos.formatter.reputation(result[0].reputation); // округленное целое число
                                     // получить СГ аккаунта
-                                    var SP = getSteemPower(steem_data, account);
+                                    var SP = getSteemPower(golos_data, account);
                                                                         
                                     if((show_only === '') || (show_only === account[0].name)){  // DEBUG row -> проверка показа кита для отладочного режима
                                         if (SP >= $('#min_sp').val()*1) {
                                             //_d(account);
                                             // получить данные поста
-                                            steem.api.getContent(operation.author, operation.permlink, function(err, post) {
+                                            golos.api.getContent(operation.author, operation.permlink, function(err, post) {
                                                 //_d(['-----post------',post]);
                                                 // отсюда вытащить rshares и weight текщего апвоута                                                
-                                                steem.api.getActiveVotes(operation.author, operation.permlink, function(err, post_votes) {
+                                                golos.api.getActiveVotes(operation.author, operation.permlink, function(err, post_votes) {
                                                     
                                                     if(err === null){
                                                                                                    
@@ -351,7 +351,8 @@ $(function () {
     
     // получить репутацию аккаунта
     function getReputation(crude_rep){
-        if(isNaN(crude_rep)){ crude_rep = '0';}
+        if(isNaN(crude_rep) || (crude_rep == '')){ crude_rep = '0';}
+        crude_rep = crude_rep+''; // перевести в строку
         var is_negative = crude_rep.charAt(0) === '-';
         // убрать первый символ, если репутация негативная 
         crude_rep = is_negative ? crude_rep.substr(1): crude_rep;
@@ -364,9 +365,9 @@ $(function () {
     }
     
     // получить СГ аккаунта
-    function getSteemPower(steem_data, acc) {
-        var movementGlobal = steem_data.total_vesting_shares.split(' ')[0];
-        var powerGlobal = steem_data.total_vesting_fund_steem.split(' ')[0];
+    function getSteemPower(golos_data, acc) {
+        var movementGlobal = golos_data.total_vesting_shares.split(' ')[0];
+        var powerGlobal = golos_data.total_vesting_fund_steem.split(' ')[0];
         var accVests = acc[0].vesting_shares.split(' ')[0];
         return (powerGlobal * (accVests / movementGlobal)).toFixed(3);
     }
@@ -387,7 +388,7 @@ $(function () {
         // воспроизвести звук спустя 1 сек
         if (whale_data.sound && $('#sound_on').is(':checked')) {
             setTimeout(function () {               
-               whale_data.sound.play();
+               whale_data.sound().play();
             }, 1000);
         }
     }
